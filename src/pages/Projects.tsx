@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { PROJECTS, Project } from '../data/mockData';
+import { PROJECTS } from '../data/mockData';
 import ProjectDetail from './ProjectDetail';
 
 const Projects: React.FC = () => {

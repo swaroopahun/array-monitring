@@ -14,7 +14,6 @@ const Dashboard: React.FC = () => {
   const activeAlarms = alarms.filter((a) => a.status === 'active');
   const activeAlarmsCount = activeAlarms.length;
 
-  const totalCapacity = PROJECTS.reduce((sum, p) => sum + p.mw, 0);
   const totalDevices = PROJECTS.reduce((sum, p) => sum + p.devices, 0);
   const totalOnline = PROJECTS.reduce((sum, p) => sum + (p.status !== 'offline' ? p.online : 0), 0);
   const totalWarning = PROJECTS.reduce((sum, p) => sum + (p.status !== 'offline' ? p.warning : 0), 0);
