@@ -602,7 +602,21 @@ const Battery: React.FC = () => {
                       </span>
                     </td>
                     <td style={{ color: getSocColor(b.status), fontFamily: 'var(--fs)', fontSize: '12px' }}>
-                      {b.status}
+                      <span
+                        style={{
+                          background: getSocBg(b.status),
+                          color: getSocColor(b.status),
+                          fontFamily: 'var(--fh)',
+                          fontSize: '12px',
+                          padding: '3px 10px',
+                          borderRadius: '10px',
+                          display: 'inline-block',
+                          minWidth: '44px',
+                          textAlign: 'center',
+                        }}
+                      >
+                        {b.soh || 0}%
+                      </span>
                     </td>
                   </tr>
                 ))}
