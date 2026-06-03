@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { PROJECTS, Project } from '../data/mockData';
+import { PROJECTS } from '../data/mockData';
 import MapWidget from '../components/MapWidget';
 import { Chart, registerables } from 'chart.js';
 

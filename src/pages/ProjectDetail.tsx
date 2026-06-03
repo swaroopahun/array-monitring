@@ -21,8 +21,8 @@ const ProjectDetail: React.FC = () => {
 
   // Autotracking state
   const [isAuto, setIsAuto] = useState(true);
-  const [manualAngle, setManualAngle] = useState(-28.4);
-  const [currentDialAngle, setCurrentDialAngle] = useState(-28.4);
+  const [manualAngle] = useState(-28.4);
+  const [, setCurrentDialAngle] = useState(-28.4);
 
   // Safety Stows state
   const [stowsList, setStowsList] = useState<Stow[]>(() => [...STOWS]);
@@ -313,7 +313,7 @@ const ProjectDetail: React.FC = () => {
                           MAINTENANCE TRIGGERS
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyBetween: 'space-between', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <span style={{ fontFamily: 'var(--fs)', fontSize: '12px' }}>Snow Shed</span>
                             <div style={{ display: 'flex', gap: '6px' }}>
                               <button

@@ -48,10 +48,6 @@ const Battery: React.FC = () => {
 
   const count3ah = filteredBatteries.filter((b) => b.size === '3Ah').length;
   const count6ah = filteredBatteries.filter((b) => b.size === '6Ah').length;
-  const totalCapacityAh = validBatteries.reduce(
-    (sum, b) => sum + b.soc * (b.size === '6Ah' ? 6 : 3),
-    0
-  );
 
   const healthPct = totalCount > 0 ? Math.round((healthyCount / totalCount) * 100) : 0;
 
@@ -185,7 +181,7 @@ const Battery: React.FC = () => {
                 callbacks: {
                   label: (context) => {
                     const lbl = context.dataset.label;
-                    if (lbl === 'Min SoC' || lbl === 'Max SoC') return null;
+                    if (lbl === 'Min SoC' || lbl === 'Max SoC') return;
                     return ` ${lbl}: ${context.parsed.y}%`;
                   },
                 },

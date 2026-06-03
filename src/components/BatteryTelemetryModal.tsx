@@ -137,8 +137,8 @@ const BatteryTelemetryModal: React.FC<BatteryTelemetryModalProps> = ({
       if (socRef.current) drawChart(socRef.current, 'soc', socSeries, '#458BEB', '%', 0, 100);
       if (sohRef.current) drawChart(sohRef.current, 'soh', sohSeries, '#13A34A', '%', 70, 100);
       if (tempRef.current) drawChart(tempRef.current, 'temp', tempSeries, '#FFB600', '°C', 5, 50);
-      if (voltRef.current) drawChart(voltRef.current, 'volt', voltSeries, 'V', null, null);
-      if (currRef.current) drawChart(currRef.current, 'curr', currSeries, 'A', null, null);
+      if (voltRef.current) drawChart(voltRef.current, 'volt', voltSeries, '#0070F3', 'V', null, null);
+      if (currRef.current) drawChart(currRef.current, 'curr', currSeries, '#0B8C6D', 'A', null, null);
     }, 50);
 
     return () => {

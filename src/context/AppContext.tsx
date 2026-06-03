@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Project, Alarm, ALARMS, PROJECTS } from '../data/mockData';
+import { ALARMS } from '../data/mockData';
+import type { Project, Alarm } from '../data/mockData';
 
 export type Theme = 'dark' | 'light';
 
