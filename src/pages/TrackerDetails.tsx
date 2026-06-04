@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { PROJECTS, BATTERY_DATA } from '../data/mockData';
-import { genDevices } from '../data/mockData';
+import { PROJECTS, BATTERY_DATA, genDevices, Project, Device, Battery } from '../data/mockData';
 
 const TrackerDetails: React.FC = () => {
   const [selectedProj, setSelectedProj] = useState('');
@@ -17,15 +16,15 @@ const TrackerDetails: React.FC = () => {
   const trackerDetails: Record<string, any> = {};
 
   // Collect all tracker IDs and their associated data
-  allProjects.forEach((p) => {
-    genDevices(p).forEach((d) => {
+  allProjects.forEach((_p: Project) => {
+    genDevices(_p).forEach((d: Device) => {
       // Each device is part of a tracker group
       const trackerId = `T-${String(Math.floor(Math.random() * 500)).padStart(3, '0')}`;
       if (!trackerSet.has(trackerId)) {
         trackerSet.add(trackerId);
         trackerDetails[trackerId] = {
           id: trackerId,
-          project: p.name,
+          project: _p.name,
           devices: [],
           batteries: [],
           status: d.status,
@@ -37,10 +36,9 @@ const TrackerDetails: React.FC = () => {
   });
 
   // Also get trackers from battery data
-  BATTERY_DATA.forEach((b) => {
+  BATTERY_DATA.forEach((b: Battery) => {
     if (!trackerSet.has(b.trackerId)) {
       trackerSet.add(b.trackerId);
-      const proj = PROJECTS.find((p) => p.name === b.project);
       trackerDetails[b.trackerId] = {
         id: b.trackerId,
         project: b.project,
@@ -256,7 +254,7 @@ const TrackerDetails: React.FC = () => {
                   <div style={{ fontSize: '11px', color: 'var(--ts)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1.2px' }}>📡 Devices ({currentTracker.devices.length})</div>
                   {currentTracker.devices.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '120px', overflowY: 'auto' }}>
-                      {currentTracker.devices.slice(0, 5).map((d) => (
+                      {currentTracker.devices.slice(0, 5).map((d: Device) => (
                         <div
                           key={d.id}
                           style={{
@@ -297,7 +295,7 @@ const TrackerDetails: React.FC = () => {
                   <div style={{ fontSize: '11px', color: 'var(--ts)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1.2px' }}>🔋 Batteries ({currentTracker.batteries.length})</div>
                   {currentTracker.batteries.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '120px', overflowY: 'auto' }}>
-                      {currentTracker.batteries.slice(0, 5).map((b) => (
+                      {currentTracker.batteries.slice(0, 5).map((b: Battery) => (
                         <div
                           key={b.id}
                           style={{
