@@ -107,6 +107,32 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             'Battery'
           )}
           {navItem(
+            'devices',
+            <svg className="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <rect x="2" y="3" width="12" height="10" rx="1.5" />
+              <path d="M5 14h6" strokeWidth="1" />
+            </svg>,
+            'Device Table View'
+          )}
+          {navItem(
+            'trackers',
+            <svg className="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="8" cy="8" r="5" />
+              <path d="M8 4v8M4 8h8" />
+            </svg>,
+            'Tracker Details'
+          )}
+          {navItem(
+            'comhub',
+            <svg className="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="4" cy="5" r="1.5" />
+              <circle cx="12" cy="5" r="1.5" />
+              <circle cx="8" cy="12" r="1.5" />
+              <path d="M5 6.5L7 10.5M11 6.5L9 10.5M4 5L8 11.5M12 5L8 11.5" />
+            </svg>,
+            'Communication Hub'
+          )}
+          {navItem(
             'alarms',
             <svg className="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M8 1a5 5 0 00-5 5v3L1.5 11h13L13 9V6A5 5 0 008 1z" />

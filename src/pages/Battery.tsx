@@ -14,13 +14,16 @@ const Battery: React.FC = () => {
   // Modal telemetry popup state
   const [telemetryBattery, setTelemetryBattery] = useState<BatteryType | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedBattery, setSelectedBattery] = useState<BatteryType | null>(null);
 
   const socChartRef = useRef<HTMLCanvasElement | null>(null);
   const tempChartRef = useRef<HTMLCanvasElement | null>(null);
+  const socDistChartRef = useRef<HTMLCanvasElement | null>(null);
   const donutChartRef = useRef<HTMLCanvasElement | null>(null);
 
   const socChart = useRef<Chart | null>(null);
   const tempChart = useRef<Chart | null>(null);
+  const socDistChart = useRef<Chart | null>(null);
   const donutChart = useRef<Chart | null>(null);
 
   // Filter battery data list
@@ -229,7 +232,7 @@ const Battery: React.FC = () => {
         allTemps.forEach((t) => {
           const bucket = Math.floor(t / 5) * 5;
           if (buckets[bucket] !== undefined) {
-            buckets[bucket] += 1 / 60; // 1 reading = 1/60 hours
+            buckets[bucket] += 1; // 1 reading = 1 hour (hourly readings over 7 days)
           }
         });
 
@@ -295,7 +298,67 @@ const Battery: React.FC = () => {
       }
     }
 
-    // 3. Donut Health share chart
+    // 3. SoC Distribution Doughnut
+    const socDistCanvas = socDistChartRef.current;
+    if (socDistCanvas) {
+      const ctx = socDistCanvas.getContext('2d');
+      if (ctx) {
+        if (socDistChart.current) socDistChart.current.destroy();
+
+        const socBuckets: Record<string, number> = {
+          '0-25%': 0,
+          '25-50%': 0,
+          '50-75%': 0,
+          '75-100%': 0,
+        };
+
+        filteredBatteries.forEach((b) => {
+          if (b.soc < 25) socBuckets['0-25%'] += 1;
+          else if (b.soc < 50) socBuckets['25-50%'] += 1;
+          else if (b.soc < 75) socBuckets['50-75%'] += 1;
+          else socBuckets['75-100%'] += 1;
+        });
+
+        const socDistData = [
+          { label: '0-25%', val: socBuckets['0-25%'], col: '#FF4444' },
+          { label: '25-50%', val: socBuckets['25-50%'], col: '#FFB600' },
+          { label: '50-75%', val: socBuckets['50-75%'], col: '#458BEB' },
+          { label: '75-100%', val: socBuckets['75-100%'], col: '#13A34A' },
+        ];
+
+        socDistChart.current = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: socDistData.map((d) => d.label),
+            datasets: [
+              {
+                data: socDistData.map((d) => d.val),
+                backgroundColor: socDistData.map((d) => d.col),
+                borderWidth: 0,
+                hoverOffset: 4,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '72%',
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#091E30',
+                borderColor: 'rgba(255,255,255,.1)',
+                borderWidth: 1,
+                bodyColor: '#fff',
+                bodyFont: { family: 'Oswald' },
+              },
+            },
+          },
+        });
+      }
+    }
+
+    // 4. Donut Health share chart
     const donutCanvas = donutChartRef.current;
     if (donutCanvas) {
       const ctx = donutCanvas.getContext('2d');
@@ -344,6 +407,7 @@ const Battery: React.FC = () => {
     return () => {
       if (socChart.current) socChart.current.destroy();
       if (tempChart.current) tempChart.current.destroy();
+      if (socDistChart.current) socDistChart.current.destroy();
       if (donutChart.current) donutChart.current.destroy();
     };
   }, [selectedProj]); // Re-render when selected project filters change
@@ -549,8 +613,7 @@ const Battery: React.FC = () => {
         </div>
       </div>
 
-      <div className="g21 mt14">
-        {/* Table of batteries */}
+      <div className="g21">
         <div className="card">
           <div className="card-hdr">
             <div className="card-title">Storage battery status registry</div>
@@ -577,11 +640,18 @@ const Battery: React.FC = () => {
                   <th>Tracker ID</th>
                   <th>State of Charge (SoC)</th>
                   <th>Health Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {displayBatteries.map((b) => (
-                  <tr key={b.id} onClick={() => handleOpenTelemetry(b)} title="Click to open historical curves">
+                  <tr
+                    key={b.id}
+                    onClick={() => setSelectedBattery(b)}
+                    onDoubleClick={() => handleOpenTelemetry(b)}
+                    title="Click to select (double-click to open telemetry)"
+                    style={selectedBattery?.id === b.id ? { background: 'rgba(69,139,235,0.04)' } : undefined}
+                  >
                     <td className="td-bold">{b.id}</td>
                     <td style={{ fontFamily: 'var(--fs)', fontSize: '12px', color: 'var(--sky)' }}>{b.trackerId}</td>
                     <td>
@@ -618,6 +688,18 @@ const Battery: React.FC = () => {
                         {b.soh || 0}%
                       </span>
                     </td>
+                    
+                    <td style={{ width: '72px', textAlign: 'center' }}>
+                      <button
+                        className="btn btn-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenTelemetry(b);
+                        }}
+                      >
+                        View
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -626,13 +708,140 @@ const Battery: React.FC = () => {
           {renderPaginationButtons()}
         </div>
 
+        {/* Selected battery details (blank area elaboration) */}
+        <div className="card">
+          <div className="card-hdr">
+            <div className="card-title">Battery Details</div>
+          </div>
+          <div className="card-body">
+            {selectedBattery ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--ts)' }}>Battery ID</div>
+                    <div className="td-bold">{selectedBattery.id}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--ts)' }}>Tracker</div>
+                    <div style={{ fontFamily: 'var(--fs)', color: 'var(--sky)' }}>{selectedBattery.trackerId}</div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--ts)' }}>SoC</div>
+                    <div style={{ fontSize: '18px', fontWeight: 700 }}>{selectedBattery.soc}%</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--ts)' }}>SoH</div>
+                    <div style={{ fontSize: '18px', fontWeight: 700 }}>{selectedBattery.soh}%</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '12px', color: 'var(--ts)' }}>Size</div>
+                    <div style={{ fontSize: '14px' }}>{selectedBattery.size}</div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: '12px', color: 'var(--ts)', marginBottom: '6px' }}>Temperature (last 7 days)</div>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    {(() => {
+                      const temps = selectedBattery.tempReadings || [];
+                      const avg = temps.length ? Math.round((temps.reduce((a, v) => a + v, 0) / temps.length) * 10) / 10 : 0;
+                      const min = temps.length ? Math.round(Math.min(...temps) * 10) / 10 : 0;
+                      const max = temps.length ? Math.round(Math.max(...temps) * 10) / 10 : 0;
+                      return (
+                        <div style={{ display: 'flex', gap: '12px' }}>
+                          <div>
+                            <div style={{ fontSize: '11px', color: 'var(--ts)' }}>Avg</div>
+                            <div className="td-bold">{avg}°C</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '11px', color: 'var(--ts)' }}>Min</div>
+                            <div className="td-bold">{min}°C</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '11px', color: 'var(--ts)' }}>Max</div>
+                            <div className="td-bold">{max}°C</div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    className="btn btn-pri"
+                    onClick={() => selectedBattery && handleOpenTelemetry(selectedBattery)}
+                  >
+                    Open Telemetry
+                  </button>
+                  <button
+                    className="btn btn-sec"
+                    onClick={() => setSelectedBattery(null)}
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ color: 'var(--ts)' }}>Select a battery from the table to view details here.</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="g21">
         {/* Temperature histogram chart */}
         <div className="card">
           <div className="card-hdr">
-            <div className="card-title">Temperature Exposure Exposure Index</div>
+            <div className="card-title">Battery Temperature Histogram</div>
           </div>
           <div className="card-body" style={{ height: '220px', position: 'relative' }}>
             <canvas ref={tempChartRef}></canvas>
+          </div>
+        </div>
+
+        {/* SoC Distribution doughnut chart */}
+        <div className="card">
+          <div className="card-hdr">
+            <div className="card-title">Battery SoC Distribution</div>
+          </div>
+          <div className="card-body">
+            <div className="donut-wrap">
+              <canvas ref={socDistChartRef} width="160" height="160"></canvas>
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-around',
+                flexWrap: 'wrap',
+                marginTop: '16px',
+                gap: '8px',
+              }}
+            >
+              {[
+                { label: '0-25%', val: filteredBatteries.filter((b) => b.soc < 25).length, col: '#FF4444' },
+                { label: '25-50%', val: filteredBatteries.filter((b) => b.soc >= 25 && b.soc < 50).length, col: '#FFB600' },
+                { label: '50-75%', val: filteredBatteries.filter((b) => b.soc >= 50 && b.soc < 75).length, col: '#458BEB' },
+                { label: '75-100%', val: filteredBatteries.filter((b) => b.soc >= 75).length, col: '#13A34A' },
+              ].map((d) => (
+                <div
+                  key={d.label}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    fontFamily: 'var(--fs)',
+                    fontSize: '11px',
+                  }}
+                >
+                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: d.col, flexShrink: 0 }} />
+                  {d.label}: {d.val}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

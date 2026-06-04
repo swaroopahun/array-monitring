@@ -435,7 +435,7 @@ select {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 13px 16px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--bd);
 }
 
@@ -459,38 +459,39 @@ select {
 }
 
 .card-body {
-  padding: 14px 16px;
+  padding: 12px 14px;
 }
 
 /* ═══════ GRIDS ═══════ */
 .g4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  gap: 12px;
 }
 
 .g3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  gap: 12px;
 }
 
 .g2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 12px;
 }
 
 .g21 {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 14px;
+  gap: 12px;
+  margin-top: 14px;
 }
 
 .g12 {
   display: grid;
   grid-template-columns: 1fr 2fr;
-  gap: 14px;
+  gap: 12px;
 }
 
 .mt14 {
@@ -519,7 +520,7 @@ select {
 }
 
 .gap14 {
-  gap: 14px;
+  gap: 12px;
 }
 
 .f1 {
@@ -531,7 +532,7 @@ select {
   background: var(--bc);
   border: 1px solid var(--bd);
   border-radius: var(--rl);
-  padding: 14px 16px;
+  padding: 12px 14px;
   position: relative;
   overflow: hidden;
 }
@@ -1627,7 +1628,7 @@ tbody tr:hover td {
 .team-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 
 .team-card {

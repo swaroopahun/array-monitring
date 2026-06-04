@@ -10,6 +10,9 @@ import FieldView from './pages/FieldView';
 import Analytics from './pages/Analytics';
 import Weather from './pages/Weather';
 import Battery from './pages/Battery';
+import Devices from './pages/Devices';
+import TrackerDetails from './pages/TrackerDetails';
+import CommunicationHub from './pages/CommunicationHub';
 import Alarms from './pages/Alarms';
 import Reports from './pages/Reports';
 import Team from './pages/Team';
@@ -34,6 +37,12 @@ const AppContent: React.FC = () => {
         return <Weather />;
       case 'battery':
         return <Battery />;
+      case 'devices':
+        return <Devices />;
+      case 'trackers':
+        return <TrackerDetails />;
+      case 'comhub':
+        return <CommunicationHub />;
       case 'alarms':
         return <Alarms />;
       case 'reports':

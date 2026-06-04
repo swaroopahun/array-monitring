@@ -49,7 +49,7 @@ const BatteryTelemetryModal: React.FC<BatteryTelemetryModalProps> = ({
 
     const socSeries = makeSeries(battery.soc, 8, 4).map((v) => Math.min(100, Math.max(0, v)));
     const sohSeries = makeSeries(battery.soh || 88, 3, 1).map((v) => Math.min(100, Math.max(70, v)));
-    const tempSeries = makeSeries(25, 6, 2);
+    const tempSeries = (battery.tempReadings || Array.from({ length: 168 }, () => 25)).map((v) => parseFloat(v.toFixed(1)));
     const voltSeries = makeSeries(battery.size === '6Ah' ? 12.4 : 3.7, 0.3, 0.1);
     const currSeries = makeSeries(0.8, 1.2, 0.5).map((v) => Math.max(0, v));
 
