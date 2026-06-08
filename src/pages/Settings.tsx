@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import ConfirmModal from '../components/ConfirmModal';
 
+const userRoles = ['Operations Manager', 'Field Engineer', 'Analyst', 'Maintenance Tech', 'Read Only'];
+
 const Settings: React.FC = () => {
-  const { theme, toggleTheme, addToast } = useApp();
-  const [profileName, setProfileName] = useState('Operator');
+  const { theme, toggleTheme, addToast, currentUser, setCurrentUser } = useApp();
+  const [profileName, setProfileName] = useState(currentUser.name);
   const [profileEmail, setProfileEmail] = useState('operator@portal.com');
   const [timezone, setTimezone] = useState('BRT (UTC-3) — Brasília');
   const [language, setLanguage] = useState('English');
@@ -57,6 +59,20 @@ const Settings: React.FC = () => {
                 />
               </div>
               <div className="form-group">
+                <label className="form-label">Access Role</label>
+                <select
+                  className="form-input"
+                  value={currentUser.role}
+                  onChange={(e) => setCurrentUser({ ...currentUser, role: e.target.value })}
+                >
+                  {userRoles.map((role) => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
                 <label className="form-label">Timezone</label>
                 <select
                   className="form-input"
@@ -80,7 +96,13 @@ const Settings: React.FC = () => {
                   <option>Español</option>
                 </select>
               </div>
-              <button className="btn btn-pri" onClick={() => addToast('✅', 'Profile updated successfully', 'success')}>
+              <button
+                className="btn btn-pri"
+                onClick={() => {
+                  setCurrentUser({ ...currentUser, name: profileName });
+                  addToast('✅', 'Profile and access role updated', 'success');
+                }}
+              >
                 Save Changes
               </button>
             </div>

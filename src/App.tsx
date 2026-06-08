@@ -7,23 +7,35 @@ import Statusbar from './components/Statusbar';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
 import FieldView from './pages/FieldView';
+import DigitalTwin from './pages/DigitalTwin';
 import Analytics from './pages/Analytics';
 import Weather from './pages/Weather';
 import Battery from './pages/Battery';
 import Devices from './pages/Devices';
 import TrackerDetails from './pages/TrackerDetails';
 import CommunicationHub from './pages/CommunicationHub';
+import FirmwareControl from './pages/FirmwareControl';
+import SystemDiagnostics from './pages/SystemDiagnostics';
 import Alarms from './pages/Alarms';
 import Reports from './pages/Reports';
 import Team from './pages/Team';
 import Settings from './pages/Settings';
 
 const AppContent: React.FC = () => {
-  const { page, toasts, removeToast } = useApp();
+  const { page, toasts, removeToast, canAccess } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Render the current active page
   const renderPage = () => {
+    if (!canAccess(page)) {
+      return (
+        <div className="page active" style={{ padding: '28px' }}>
+          <div className="sec-title">Access Restricted</div>
+          <div className="sec-sub">Your current role does not have permission to view this section.</div>
+        </div>
+      );
+    }
+
     switch (page) {
       case 'dashboard':
         return <Dashboard />;
@@ -31,6 +43,8 @@ const AppContent: React.FC = () => {
         return <Projects />;
       case 'fieldview':
         return <FieldView />;
+      case 'digitaltwin':
+        return <DigitalTwin />;
       case 'telemetry':
         return <Analytics />;
       case 'weather':
@@ -43,6 +57,10 @@ const AppContent: React.FC = () => {
         return <TrackerDetails />;
       case 'comhub':
         return <CommunicationHub />;
+      case 'firmware':
+        return <FirmwareControl />;
+      case 'diagnostics':
+        return <SystemDiagnostics />;
       case 'alarms':
         return <Alarms />;
       case 'reports':

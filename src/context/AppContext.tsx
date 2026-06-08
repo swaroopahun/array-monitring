@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ALARMS } from '../data/mockData';
-import type { Project, Alarm } from '../data/mockData';
+import { ALARMS, TEAM } from '../data/mockData';
+import type { Project, Alarm, TeamMember } from '../data/mockData';
 
 export type Theme = 'dark' | 'light';
 
@@ -18,6 +18,9 @@ interface AppContextType {
   setPage: (page: string) => void;
   currentProj: Project | null;
   setCurrentProj: (proj: Project | null) => void;
+  currentUser: TeamMember;
+  setCurrentUser: (user: TeamMember) => void;
+  canAccess: (page: string) => boolean;
   alarms: Alarm[];
   ackAlarm: (id: number) => void;
   ackAllAlarms: () => void;
@@ -37,8 +40,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [page, setPageInternal] = useState<string>('dashboard');
   const [currentProj, setCurrentProjInternal] = useState<Project | null>(null);
+  const [currentUser, setCurrentUserInternal] = useState<TeamMember>(() => TEAM[0]);
   const [alarms, setAlarms] = useState<Alarm[]>(() => [...ALARMS]);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  const rolePermissions: Record<string, string[]> = {
+    'Operations Manager': ['dashboard', 'projects', 'fieldview', 'digitaltwin', 'telemetry', 'weather', 'battery', 'devices', 'trackers', 'comhub', 'firmware', 'diagnostics', 'alarms', 'reports', 'team', 'settings'],
+    'Field Engineer': ['dashboard', 'projects', 'fieldview', 'digitaltwin', 'telemetry', 'weather', 'battery', 'devices', 'trackers', 'comhub', 'alarms', 'reports', 'team', 'settings'],
+    'Analyst': ['dashboard', 'projects', 'fieldview', 'digitaltwin', 'telemetry', 'weather', 'battery', 'devices', 'trackers', 'comhub', 'alarms', 'reports', 'team', 'settings'],
+    'Maintenance Tech': ['dashboard', 'projects', 'fieldview', 'digitaltwin', 'weather', 'battery', 'devices', 'trackers', 'comhub', 'firmware', 'diagnostics', 'alarms', 'team', 'settings'],
+    'Read Only': ['dashboard', 'projects', 'fieldview', 'digitaltwin', 'telemetry', 'weather', 'devices', 'trackers', 'comhub', 'alarms', 'reports', 'team', 'settings'],
+  };
+
+  const canAccess = (pageKey: string) => {
+    const allowed = rolePermissions[currentUser.role] || [];
+    return allowed.includes(pageKey);
+  };
 
   // Apply theme class to document element
   useEffect(() => {
@@ -62,6 +79,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (proj) {
       setPageInternal('projects');
     }
+  };
+
+  const setCurrentUser = (user: TeamMember) => {
+    setCurrentUserInternal(user);
   };
 
   const ackAlarm = (id: number) => {
@@ -114,6 +135,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setPage,
         currentProj,
         setCurrentProj,
+        currentUser,
+        setCurrentUser,
+        canAccess,
         alarms,
         ackAlarm,
         ackAllAlarms,

@@ -7,21 +7,24 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-  const { page, setPage, alarms } = useApp();
+  const { page, setPage, alarms, currentUser, canAccess } = useApp();
 
   const activeAlarmsCount = alarms.filter((a) => a.status === 'active').length;
 
   const handleNavClick = (newPage: string) => {
+    if (!canAccess(newPage)) return;
     setPage(newPage);
     onClose();
   };
 
   const navItem = (targetPage: string, icon: React.ReactNode, label: string, showBadge = false) => {
     const isActive = page === targetPage || (targetPage === 'projects' && page === 'projects');
+    const isDisabled = !canAccess(targetPage);
     return (
       <div
-        className={`nav-item ${isActive ? 'active' : ''}`}
+        className={`nav-item ${isActive ? 'active' : ''} ${isDisabled ? 'disabled' : ''}`}
         onClick={() => handleNavClick(targetPage)}
+        style={isDisabled ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
       >
         {icon}
         {label}
@@ -79,6 +82,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             'Field View'
           )}
           {navItem(
+            'digitaltwin',
+            <svg className="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M3 3h10v10H3z" />
+              <path d="M3 7h10M7 3v10" />
+            </svg>,
+            'Map / Digital Twin'
+          )}
+          {navItem(
             'telemetry',
             <svg className="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
               <polyline points="1,12 4,7 7,9 10,4 13,6 15,3" />
@@ -133,6 +144,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             'Communication Hub'
           )}
           {navItem(
+            'firmware',
+            <svg className="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M4 3h8v3H4z" />
+              <path d="M4 8h8v5H4z" />
+              <path d="M6 6v2M10 6v2" />
+            </svg>,
+            'Firmware Control'
+          )}
+          {navItem(
+            'diagnostics',
+            <svg className="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M4 3h8v10H4z" />
+              <path d="M4 7h8M8 3v10" />
+            </svg>,
+            'System Diagnostics'
+          )}
+          {navItem(
             'alarms',
             <svg className="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M8 1a5 5 0 00-5 5v3L1.5 11h13L13 9V6A5 5 0 008 1z" />
@@ -175,10 +203,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         <div className="sidebar-footer">
           <div className="user-pill">
-            <div className="avatar">OP</div>
+            <div className="avatar">{currentUser.init}</div>
             <div>
-              <div className="user-name">Operator</div>
-              <div className="user-role">Operations Manager</div>
+              <div className="user-name">{currentUser.name}</div>
+              <div className="user-role">{currentUser.role}</div>
             </div>
           </div>
         </div>
