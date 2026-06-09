@@ -1,15 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { useApp } from '../context/AppContext';
 import { PROJECTS } from '../data/mockData';
 import MapWidget from '../components/MapWidget';
-import { Chart, registerables } from 'chart.js';
-
-Chart.register(...registerables);
 
 const Dashboard: React.FC = () => {
   const { alarms, ackAlarm, setCurrentProj, setPage } = useApp();
-  const chartRef = useRef<HTMLCanvasElement | null>(null);
-  const chartInstance = useRef<Chart | null>(null);
 
   const activeAlarms = alarms.filter((a) => a.status === 'active');
   const activeAlarmsCount = activeAlarms.length;
@@ -38,136 +33,43 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Render Power Chart
-  useEffect(() => {
-    const canvas = chartRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const hrs = Array.from({ length: 14 }, (_, i) => `${(i + 5).toString().padStart(2, '0')}:00`);
-    const pw = [0, 4, 28, 72, 118, 148, 162, 168, 164, 150, 132, 108, 78, 45];
-
-    const gradient = ctx.createLinearGradient(0, 0, 0, 125);
-    gradient.addColorStop(0, 'rgba(255,182,0,.3)');
-    gradient.addColorStop(1, 'rgba(255,182,0,0)');
-
-    if (chartInstance.current) {
-      chartInstance.current.destroy();
-    }
-
-    chartInstance.current = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: hrs,
-        datasets: [
-          {
-            label: 'Power (MW)',
-            data: pw,
-            borderColor: '#FFB600',
-            backgroundColor: gradient,
-            borderWidth: 2,
-            pointRadius: 2,
-            tension: 0.4,
-            fill: true,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#091E30',
-            borderColor: 'rgba(255,255,255,.1)',
-            borderWidth: 1,
-            titleColor: '#9AA5AF',
-            bodyColor: '#fff',
-            titleFont: { family: 'Oswald', size: 10 },
-            bodyFont: { family: 'Oswald', size: 11 },
-          },
-        },
-        scales: {
-          x: {
-            grid: { color: 'rgba(128,128,128,.08)' },
-            ticks: {
-              color: '#9AA5AF',
-              font: { family: 'Oswald', size: 10 },
-            },
-          },
-          y: {
-            grid: { color: 'rgba(128,128,128,.08)' },
-            ticks: {
-              color: '#FFB600',
-              font: { family: 'Oswald', size: 10 },
-              callback: (v) => v + ' MW',
-            },
-          },
-        },
-      },
-    });
-
-    return () => {
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
-      }
-    };
-  }, []);
-
-  const getStatusBadge = (status: string) => {
-    const badges: Record<string, string> = {
-      online: 'b-online',
-      warning: 'b-warning',
-      offline: 'b-offline',
-    };
-    return (
-      <span className={`badge ${badges[status] || 'b-info'}`}>
-        <span className="bdot"></span>
-        {status}
-      </span>
-    );
-  };
-
   return (
     <div className="page active" id="page-dashboard">
       {/* KPI Cards Grid */}
       <div className="g4" style={{ marginBottom: '14px' }}>
         <div className="kpi kpi-sky">
-          <div className="kpi-bg">📋</div>
-          <div className="kpi-lbl">Active Projects</div>
+          <div className="kpi-bg">�</div>
+          <div className="kpi-lbl">Communication Status</div>
           <div className="kpi-val">
-            12<span className="kpi-unit">/ 14</span>
+            {totalOnline + totalWarning}
+            <span className="kpi-unit"> devices</span>
           </div>
-          <div className="kpi-delta up">▲ 2 online this week</div>
-        </div>
-        <div className="kpi kpi-green">
-          <div className="kpi-bg">✅</div>
-          <div className="kpi-lbl">System Availability</div>
-          <div className="kpi-val">
-            {systemAvailability}
-            <span className="kpi-unit">%</span>
-          </div>
-          <div className="kpi-delta up">▲ 0.6% vs last week</div>
-        </div>
-        <div className="kpi kpi-teal">
-          <div className="kpi-bg">🔌</div>
-          <div className="kpi-lbl">Devices Online</div>
-          <div className="kpi-val">
-            {totalOnline}
-            <span className="kpi-unit">/{totalDevices}</span>
-          </div>
-          <div className="kpi-delta up">▲ {((totalOnline / totalDevices) * 100).toFixed(1)}%</div>
+          <div className="kpi-delta up">Tracked across all live nodes</div>
         </div>
         <div className="kpi kpi-orange">
           <div className="kpi-bg">🔔</div>
           <div className="kpi-lbl">Active Alarms</div>
           <div className="kpi-val">
-            <span id="kpi-alarms">{activeAlarmsCount}</span>
-            <span className="kpi-unit"> alerts</span>
+            {activeAlarmsCount}
           </div>
-          <div className="kpi-delta dn">▼ {activeAlarms.filter((a) => a.sev === 'critical').length} critical</div>
+          <div className="kpi-delta dn">{activeAlarms.filter((a) => a.sev === 'critical').length} critical</div>
+        </div>
+        <div className="kpi kpi-green">
+          <div className="kpi-bg">✅</div>
+          <div className="kpi-lbl">Devices Online</div>
+          <div className="kpi-val">
+            {totalOnline}
+            <span className="kpi-unit">/{totalDevices}</span>
+          </div>
+          <div className="kpi-delta up">{((totalOnline / totalDevices) * 100).toFixed(1)}%</div>
+        </div>
+        <div className="kpi kpi-teal">
+          <div className="kpi-bg">⚠️</div>
+          <div className="kpi-lbl">Devices Offline</div>
+          <div className="kpi-val">
+            {totalOffline}
+          </div>
+          <div className="kpi-delta dn">{totalWarning} warnings</div>
         </div>
       </div>
 
@@ -295,61 +197,61 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Generation Chart and Project Tables */}
       <div className="g21 mt14">
         <div className="card">
           <div className="card-hdr">
-            <div className="card-title">Power Generation — Today</div>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <span style={{ fontSize: '10px', fontFamily: 'var(--fs)', color: 'var(--gold)' }}>
-                ● Power MW
-              </span>
-              <span className="card-act" onClick={() => setPage('telemetry')}>
-                Analytics →
-              </span>
-            </div>
+            <div className="card-title">Hardware Status Overview</div>
+            <span className="card-act" onClick={() => setPage('devices')}>
+              View devices →
+            </span>
           </div>
-          <div className="card-body" style={{ padding: '12px 14px', height: '180px', position: 'relative' }}>
-            <canvas ref={chartRef}></canvas>
+          <div className="card-body" style={{ padding: '18px 20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '14px' }}>
+              <div style={{ padding: '16px', borderRadius: 'var(--r)', background: 'rgba(16,119,87,.05)' }}>
+                <div className="metric-lbl">Communicating Devices</div>
+                <div className="metric-val">{totalOnline + totalWarning}</div>
+                <div className="metric-unit">Includes all devices with active telemetry</div>
+              </div>
+              <div style={{ padding: '16px', borderRadius: 'var(--r)', background: 'rgba(255,182,0,.08)' }}>
+                <div className="metric-lbl">Active Alarms</div>
+                <div className="metric-val">{activeAlarmsCount}</div>
+                <div className="metric-unit">{activeAlarms.filter((a) => a.sev === 'critical').length} critical</div>
+              </div>
+              <div style={{ padding: '16px', borderRadius: 'var(--r)', background: 'rgba(19,163,74,.08)' }}>
+                <div className="metric-lbl">Online / Offline</div>
+                <div className="metric-val">{totalOnline} / {totalOffline}</div>
+                <div className="metric-unit">System availability {systemAvailability}%</div>
+              </div>
+              <div style={{ padding: '16px', borderRadius: 'var(--r)', background: 'rgba(69,139,235,.08)' }}>
+                <div className="metric-lbl">Reporting Devices</div>
+                <div className="metric-val">{totalDevices}</div>
+                <div className="metric-unit">Across {PROJECTS.length} sites</div>
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="card">
           <div className="card-hdr">
-            <div className="card-title">Project Performance</div>
+            <div className="card-title">Health Snapshot</div>
           </div>
           <div className="tbl-wrap" style={{ maxHeight: '180px', overflowY: 'auto' }}>
             <table>
               <thead>
                 <tr>
                   <th>Project</th>
-                  <th>MW</th>
-                  <th>Perf</th>
-                  <th>Status</th>
+                  <th>Devices</th>
+                  <th>Online</th>
+                  <th>Offline</th>
                 </tr>
               </thead>
               <tbody>
                 {PROJECTS.map((p) => (
-                  <tr key={p.id} onClick={() => setCurrentProj(p)}>
+                  <tr key={p.id}>
                     <td className="td-bold">{p.name}</td>
-                    <td className="td-mono">{p.mw} MW</td>
-                    <td>
-                      <span
-                        style={{
-                          fontFamily: 'var(--fs)',
-                          fontSize: '12px',
-                          color:
-                            p.perf > 95
-                              ? 'var(--green-l)'
-                              : p.perf > 85
-                              ? 'var(--gold)'
-                              : 'var(--orange)',
-                        }}
-                      >
-                        {p.perf > 0 ? `${p.perf}%` : '—'}
-                      </span>
-                    </td>
-                    <td>{getStatusBadge(p.status)}</td>
+                    <td className="td-mono">{p.devices}</td>
+                    <td className="td-green">{p.online}</td>
+                    <td className="td-orange">{p.offline}</td>
                   </tr>
                 ))}
               </tbody>

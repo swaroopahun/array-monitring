@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { PROJECTS, BATTERY_DATA, genDevices, Project, Device, Battery } from '../data/mockData';
 
+const familyNames = ['Atlas', 'Orion', 'Helios', 'Astra', 'Phoenix'];
+
 const TrackerDetails: React.FC = () => {
   const [selectedProj, setSelectedProj] = useState('');
+  const [trackerFamily, setTrackerFamily] = useState('');
+  const [selectedNcu, setSelectedNcu] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedTracker, setSelectedTracker] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 8;
@@ -17,9 +22,9 @@ const TrackerDetails: React.FC = () => {
 
   // Collect all tracker IDs and their associated data
   allProjects.forEach((_p: Project) => {
-    genDevices(_p).forEach((d: Device) => {
-      // Each device is part of a tracker group
-      const trackerId = `T-${String(Math.floor(Math.random() * 500)).padStart(3, '0')}`;
+    genDevices(_p).forEach((d: Device, i: number) => {
+      const trackerId = `T-${String(Math.floor(i / 3) + 1).padStart(3, '0')}`;
+      const family = familyNames[Math.floor(i / 3) % familyNames.length];
       if (!trackerSet.has(trackerId)) {
         trackerSet.add(trackerId);
         trackerDetails[trackerId] = {
@@ -29,6 +34,8 @@ const TrackerDetails: React.FC = () => {
           batteries: [],
           status: d.status,
           lastSeen: d.lastSeen,
+          family,
+          ncu: d.ncu,
         };
       }
       trackerDetails[trackerId].devices.push(d);
@@ -46,6 +53,8 @@ const TrackerDetails: React.FC = () => {
         batteries: [b],
         status: b.status === 'Offline' ? 'offline' : 'online',
         lastSeen: 'just now',
+        family: familyNames[0],
+        ncu: 'NCU 001',
       };
     } else if (trackerDetails[b.trackerId]) {
       trackerDetails[b.trackerId].batteries.push(b);
@@ -53,7 +62,14 @@ const TrackerDetails: React.FC = () => {
   });
 
   const trackers = Array.from(trackerSet).map((id) => trackerDetails[id]).sort((a, b) => a.id.localeCompare(b.id));
-  const filteredTrackers = selectedProj === '' ? trackers : trackers.filter((t) => t.project === selectedProj);
+  const uniqueNcus = Array.from(new Set(trackers.map((t) => t.ncu))).sort();
+  const filteredTrackers = trackers.filter((t) => {
+    const matchesProject = selectedProj === '' || t.project === selectedProj;
+    const matchesFamily = trackerFamily === '' || t.family === trackerFamily;
+    const matchesNcu = selectedNcu === '' || t.ncu === selectedNcu;
+    const matchesSearch = searchTerm === '' || t.id.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesProject && matchesFamily && matchesNcu && matchesSearch;
+  });
 
   const totalPages = Math.ceil(filteredTrackers.length / PAGE_SIZE);
   const displayTrackers = filteredTrackers.slice(
@@ -136,26 +152,80 @@ const TrackerDetails: React.FC = () => {
 
   return (
     <div className="page active" id="page-trackers">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <div className="sec-title">Tracker Details & Analytics</div>
           <div className="sec-sub">View tracker specifications and associated devices/batteries</div>
         </div>
-        <select
-          className="fsel"
-          value={selectedProj}
-          onChange={(e) => {
-            setSelectedProj(e.target.value);
-            setCurrentPage(1);
-          }}
-        >
-          <option value="">All Projects</option>
-          {PROJECTS.map((p) => (
-            <option key={p.id} value={p.name}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <div className="fi" style={{ minWidth: '220px' }}>
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              style={{ color: 'var(--tm)' }}
+            >
+              <circle cx="6.5" cy="6.5" r="4.5" />
+              <line x1="10" y1="10" x2="14" y2="14" />
+            </svg>
+            <input
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder="Search trackers…"
+            />
+          </div>
+          <select
+            className="fsel"
+            value={selectedProj}
+            onChange={(e) => {
+              setSelectedProj(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="">All Projects</option>
+            {PROJECTS.map((p) => (
+              <option key={p.id} value={p.name}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <select
+            className="fsel"
+            value={trackerFamily}
+            onChange={(e) => {
+              setTrackerFamily(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="">All Tracker Families</option>
+            {familyNames.map((family) => (
+              <option key={family} value={family}>
+                {family}
+              </option>
+            ))}
+          </select>
+          <select
+            className="fsel"
+            value={selectedNcu}
+            onChange={(e) => {
+              setSelectedNcu(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="">All NCU / Gateways</option>
+            {uniqueNcus.map((ncu) => (
+              <option key={ncu} value={ncu}>
+                {ncu}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Summary KPI Cards */}
@@ -198,6 +268,8 @@ const TrackerDetails: React.FC = () => {
                 <tr>
                   <th>Tracker ID</th>
                   <th>Project</th>
+                  <th>Family</th>
+                  <th>NCU / Gateway</th>
                   <th>Status</th>
                   <th>Devices</th>
                   <th>Batteries</th>
@@ -213,6 +285,8 @@ const TrackerDetails: React.FC = () => {
                   >
                     <td className="td-bold">{t.id}</td>
                     <td style={{ fontSize: '12px', color: 'var(--ts)' }}>{t.project}</td>
+                    <td style={{ fontSize: '12px', color: 'var(--sky)' }}>{t.family}</td>
+                    <td style={{ fontSize: '12px', color: 'var(--ts)' }}>{t.ncu}</td>
                     <td>
                       <span
                         style={{
